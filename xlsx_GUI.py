@@ -1,6 +1,7 @@
 import openpyxl
 import os
 import re
+import webbrowser
 from tkinter import Tk, Label, Entry, Button, filedialog, Text, Scrollbar, VERTICAL, END
 
 def search_and_replace_key_in_excel(file_path, key, new_value, log_widget):
@@ -84,6 +85,12 @@ def start_processing(directory_entry, key_entry, value_entry, log_widget):
 
     process_excel_files_in_directory(directory, key, new_value, log_widget)
 
+def open_github_link():
+    """
+    Opens the GitHub link in the default web browser.
+    """
+    webbrowser.open("https://github.com/Maksymilianx/Excel_word_changer")
+
 # GUI Setup
 root = Tk()
 root.title("Excel Key-Value Updater")
@@ -115,5 +122,10 @@ log_widget.grid(row=4, column=0, columnspan=3, padx=10, pady=10)
 scrollbar = Scrollbar(root, orient=VERTICAL, command=log_widget.yview)
 scrollbar.grid(row=4, column=3, sticky="ns")
 log_widget.config(yscrollcommand=scrollbar.set)
+
+# GitHub link
+github_label = Label(root, text="View on GitHub", fg="blue", cursor="hand2")
+github_label.grid(row=5, column=1, pady=10)
+github_label.bind("<Button-1>", lambda e: open_github_link())
 
 root.mainloop()
