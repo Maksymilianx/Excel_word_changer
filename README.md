@@ -14,7 +14,7 @@ Follow the steps from the earlier explanation to convert this script into a stan
 1. Install pyinstaller:
     `pip install pyinstaller`
 2. Package the script: 
-    `pyinstaller --onefile --windowed script_name.py`
+    `pyinstaller --onefile --windowed xlsx_GUI.py`
 --windowed ensures that no console window appears when the app runs.
 3. Share the .exe file located in the dist folder.
 
