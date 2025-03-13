@@ -9,6 +9,9 @@ GUI app that is replacing selected word in one or many xlsx (excel related) file
 4. Start Processing: Click "Start Processing" to begin.
 5. Progress Logs: The log area will display updates and results of the processing.
 
+## Important! ## 
+For now the application works only with files that have cells with pipe separated keys and values. For example: |a=1|b=2|c=3|
+
 ### How to export it as an executable:
 Follow the steps from the earlier explanation to convert this script into a standalone executable:
 1. Install pyinstaller:
