@@ -2,12 +2,13 @@ import openpyxl
 import os
 import re
 import webbrowser
-from tkinter import Tk, Label, Entry, Button, filedialog, Text, Scrollbar, VERTICAL, END, IntVar, Checkbutton, messagebox, Toplevel
+from tkinter import Tk, Label, Entry, Button, filedialog, Text, Scrollbar, VERTICAL, END, IntVar, Checkbutton, \
+    messagebox, Toplevel
 import requests
-
 
 GITHUB_REPO = "Maksymilianx/Excel_word_changer"
 FALLBACK_VERSION = "1.0.0"  # Used if we can't fetch from GitHub
+
 
 def fetch_latest_version():
     """Fetch the latest release tag from GitHub."""
@@ -20,40 +21,41 @@ def fetch_latest_version():
     except requests.RequestException:
         return FALLBACK_VERSION  # Fallback if GitHub is unreachable
 
+
 VERSION = fetch_latest_version()  # Get the latest version
 
-def search_replace_or_remove_key(file_path, key, new_value, remove_key, log_widget, key_found):
-    """
-    Reads an Excel file, searches for a specific key-value pair delimited by '|',
-    and replaces the value associated with the key while maintaining the format.
 
-    Args:
-        file_path (str): Path to the Excel file.
-        key (str): The key to search for (e.g., "LocId").
-        new_value (str): The new value to replace the current value with (e.g., "R00").
-        log_widget (Text): Text widget to log messages.
-        remove_key (bool): Parameter which indicates if the key with its value should be removed
+def remove_key_value_pair_from_cell(cell_value, key):
     """
+    Remove the key-value pair and the surrounding pipes from the cell value.
+    If the key is not found, return None.
+    """
+    pattern = r'\|?' + re.escape(key) + r'=[^|]*\|?'
+    new_value = re.sub(pattern, '|', cell_value)
+    new_value = re.sub(r'\|{2,}', '|', new_value).strip('|')
+    return new_value if new_value != cell_value else None
+
+
+def search_replace_or_remove_key(file_path, key, new_value, remove_key, log_widget, key_found):
+    """Search for a key in an Excel file, replace its value, or remove it entirely."""
     try:
         workbook = openpyxl.load_workbook(file_path)
-        found = False  # Track if the key is found in this file
+        found = False
 
         for sheet_name in workbook.sheetnames:
             sheet = workbook[sheet_name]
             for row in sheet.iter_rows():
                 for cell in row:
                     if cell.value and isinstance(cell.value, str):
-                        pattern = rf"\|?{key}=.*?\|?"
+                        if remove_key:
+                            updated_cell = remove_key_value_pair_from_cell(cell.value, key)
+                        else:
+                            pattern = rf"\|?{key}=[^|]*\|?"
+                            updated_cell = re.sub(pattern, f"|{key}={new_value}|", cell.value)
 
-                        if re.search(pattern, cell.value):
-                            found = True  # Key is found in this file
-                            key_found[0] = True  # Update global key found tracker
-
-                            if remove_key:
-                                updated_cell = re.sub(pattern, "|", cell.value).strip("|")
-                            else:
-                                updated_cell = re.sub(pattern, f"|{key}={new_value}|", cell.value)
-
+                        if updated_cell is not None:
+                            found = True
+                            key_found[0] = True
                             cell.value = updated_cell
 
         if found:
@@ -63,17 +65,9 @@ def search_replace_or_remove_key(file_path, key, new_value, remove_key, log_widg
     except Exception as e:
         log_widget.insert(END, f"❌ Error processing {file_path}: {e}\n", "error")
 
-def process_excel_files(directory_path, key, new_value, remove_key, log_widget):
-    """
-    Iterates over all Excel files in a directory (including subfolders) and performs
-    search-and-replace for key-value pairs.
 
-    Args:
-        directory_path (str): Path to the directory containing Excel files.
-        key (str): The key to search for (e.g., "LocId").
-        new_value (str): The new value to replace the key's value (e.g., "R00").
-        log_widget (Text): Text widget to log messages.
-    """
+def process_excel_files(directory_path, key, new_value, remove_key, log_widget):
+    """Process all Excel files in a directory."""
     log_widget.delete(1.0, END)
     log_widget.insert(END, f"🔄 Processing files in {directory_path}...\n", "info")
 
@@ -95,18 +89,16 @@ def process_excel_files(directory_path, key, new_value, remove_key, log_widget):
     except Exception as e:
         log_widget.insert(END, f"❌ An error occurred: {e}\n", "error")
 
+
 def show_custom_warning_popup(message):
-    """Custom popup for warnings with a red warning label."""
+    """Custom popup for warnings, centered on the screen."""
     popup = Toplevel()
     popup.title("Warning")
     popup.geometry("300x100")
 
-    # Get screen width and height
     popup.update_idletasks()
     screen_width = popup.winfo_screenwidth()
     screen_height = popup.winfo_screenheight()
-
-    # Calculate position for centering
     x_position = (screen_width // 2) - (300 // 2)
     y_position = (screen_height // 2) - (100 // 2)
 
@@ -120,27 +112,27 @@ def show_custom_warning_popup(message):
 
     popup.grab_set()  # Make the popup modal (forces user to close it first)
 
+
 def check_for_updates():
     """Check if a newer version is available and show a popup."""
     latest_version = fetch_latest_version()
     if latest_version > VERSION:  # Compare versions
-        messagebox.showinfo("Update Available", f"A new version ({latest_version}) is available!\nVisit GitHub to download.")
+        messagebox.showinfo("Update Available",
+                            f"A new version ({latest_version}) is available!\nVisit GitHub to download.")
     else:
         messagebox.showinfo("Up to Date", "You are using the latest version.")
 
+
 def browse_directory(entry_widget):
-    """
-    Opens a file dialog to select a directory and updates the entry widget.
-    """
+    """Open a directory selection dialog."""
     directory = filedialog.askdirectory()
     if directory:
         entry_widget.delete(0, END)
         entry_widget.insert(0, directory)
 
+
 def start_processing(directory_entry, key_entry, value_entry, remove_key_var, log_widget):
-    """
-    Starts the processing of Excel files using the provided input values.
-    """
+    """Validate input and start processing files."""
     directory = directory_entry.get()
     key = key_entry.get()
     new_value = value_entry.get()
@@ -158,7 +150,6 @@ def start_processing(directory_entry, key_entry, value_entry, remove_key_var, lo
         log_widget.insert(END, "❌ Please enter a new value or check the 'Remove Key' option.\n", "error")
         return
 
-    # Show confirmation popup if "Remove Key" is checked
     if remove_key:
         confirm = messagebox.askyesno("Confirm Deletion", f"Are you sure you want to remove '{key}' and its value?")
         if not confirm:
@@ -167,9 +158,11 @@ def start_processing(directory_entry, key_entry, value_entry, remove_key_var, lo
 
     process_excel_files(directory, key, new_value, remove_key, log_widget)
 
+
 def open_github_link():
     """Opens the GitHub link in the default web browser."""
     webbrowser.open("https://github.com/Maksymilianx/Excel_word_changer")
+
 
 # GUI Setup
 root = Tk()
@@ -198,8 +191,9 @@ remove_key_checkbox = Checkbutton(root, text="Remove Key", variable=remove_key_v
 remove_key_checkbox.grid(row=3, column=1, pady=5)
 
 # Start button
-start_button = Button(root, text="Start Processing", command=lambda: start_processing(directory_entry, key_entry, value_entry, remove_key_var, log_widget))
-start_button.grid(row=4, column=1, pady=10)
+Button(root, text="Start Processing",
+       command=lambda: start_processing(directory_entry, key_entry, value_entry, remove_key_var, log_widget)).grid(
+    row=4, column=1, pady=10)
 
 # Log display
 log_widget = Text(root, height=15, width=70)
@@ -215,12 +209,13 @@ log_widget.tag_config("success", foreground="green")
 log_widget.tag_config("info", foreground="blue")
 
 # Github sync updates
-update_button = Button(root, text="Check for Updates", command=check_for_updates)
-update_button.grid(row=6, column=1, pady=5)
+Button(root, text="Check for Updates", command=check_for_updates).grid(row=6, column=1, pady=5)
 
 # GitHub link
 github_label = Label(root, text="View on GitHub", fg="blue", cursor="hand2")
 github_label.grid(row=7, column=1, pady=10)
 github_label.bind("<Button-1>", lambda e: open_github_link())
+
+log_widget.insert(END, f"🛠 Version: {VERSION}\n", "info")
 
 root.mainloop()
