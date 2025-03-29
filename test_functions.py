@@ -1,7 +1,8 @@
-# test_functions.py
 import os
 import tempfile
 import shutil
+from tkinter import messagebox
+
 import pytest
 import openpyxl
 from functions import (
@@ -15,7 +16,7 @@ from functions import (
     process_value_in_directory,
     start_value_replacement,
     check_for_updates,
-    VERSION
+    VERSION, open_github_link
 )
 import requests
 
@@ -200,13 +201,11 @@ def test_open_github_link(monkeypatch):
         called = True
         assert "github.com" in url
     monkeypatch.setattr("functions.webbrowser.open", dummy_open)
-    from functions import open_github_link
     open_github_link()
     assert called
 
 
 def test_check_for_updates(monkeypatch):
-    from tkinter import messagebox
     # Override showinfo so that it doesn't try to create a GUI.
     monkeypatch.setattr(messagebox, "showinfo", lambda title, message, **kwargs: None)
 
@@ -214,7 +213,6 @@ def test_check_for_updates(monkeypatch):
         return "v999.0"
 
     monkeypatch.setattr("functions.fetch_latest_version", dummy_fetch)
-    from functions import check_for_updates
     # This call should now not raise a TclError.
     check_for_updates()
 
