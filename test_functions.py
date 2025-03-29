@@ -204,12 +204,18 @@ def test_open_github_link(monkeypatch):
     open_github_link()
     assert called
 
+
 def test_check_for_updates(monkeypatch):
+    from tkinter import messagebox
+    # Override showinfo so that it doesn't try to create a GUI.
+    monkeypatch.setattr(messagebox, "showinfo", lambda title, message, **kwargs: None)
+
     def dummy_fetch():
         return "v999.0"
+
     monkeypatch.setattr("functions.fetch_latest_version", dummy_fetch)
     from functions import check_for_updates
-    # Calling it should not raise an error.
+    # This call should now not raise a TclError.
     check_for_updates()
 
 if __name__ == "__main__":
