@@ -94,8 +94,8 @@ Follow these steps to use the xlxs fixer application:
 
 ### Important!  
 
-For now the application works only with files that have cells with pipe separated keys and values. For example:
-|a=1|b=2|c=3|
+For now the application have two main features. It process flat files that have cells with pipe separated keys and values. For example:
+|a=1|b=2|c=3| and also search for typed cell name to rework its value. These functions are separated by page sheets.
 
 ### Contributing
 Contributions are welcome! To contribute to the project:
